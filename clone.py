@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 lines = []
-with open('../self-driving-car-sim/data/driving_log.csv') as csvfile:
+with open('../simulator-self-driving-car/Data2/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         lines.append(line)
@@ -12,30 +12,48 @@ del(lines[0])
 
 images = []
 measurements = []
+
 for line in lines:
     source_path = line[0]
     filename = source_path.split('/')[-1]
-    current_path = '../self-driving-car-sim/data/IMG/' + filename
+    #current_path = '../simulator-self-driving-car/Data2/IMG/' + filename
+    current_path = filename
     image = cv2.imread(current_path)
+	
+	# Check the image has been successfully pick up.
+	# if not, skip adding these rows in the for loop
+    if image is None:
+        print("Image path incorrect: ", current_path)
+        continue
     images.append(image)
     measurement = float(line[3])
     measurements.append(measurement)
 
+	
 X_train = np.array(images)
 y_train = np.array(measurements)
 
-print(X_train.shape)
-print(y_train.shape)
-print(current_path)
-
 from keras.models import Sequential
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Lambda
+from keras.layers.convolutional import Convolution2D
+from keras.layers.pooling import MaxPooling2D
+from keras.layers import Cropping2D
 
 model = Sequential()
-model.add(Flatten(input_shape=(160,320,3)))
+
+# normalized the data by dividing each element by 255 which is the maximum value of an image pixel
+model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
+model.add(Cropping2D(cropping=((70,25),(0,0))))
+model.add(Convolution2D(6,5,5,activation="relu"))
+model.add(MaxPooling2D())
+model.add(Convolution2D(6,5,5,activation="relu"))
+model.add(MaxPooling2D())
+model.add(Flatten())
+model.add(Dense(120))
+model.add(Dense(84))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=7)
+model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=6)
 
 model.save('model.h5')
