@@ -29,9 +29,18 @@ for line in lines:
     measurement = float(line[3])
     measurements.append(measurement)
 
+# By adding flipping image And Steering Measurements
+# create twice sample	
+augmented_images = []
+augmented_measurements = []
+for image, measurement in zip(images, measurements):
+    augmented_images.append(image)
+    augmented_measurements.append(measurement)
+    augmented_images.append(cv2.flip(image,1))
+    augmented_measurements.append(measurement*(-1.0))
 	
-X_train = np.array(images)
-y_train = np.array(measurements)
+X_train = np.array(augmented_images)
+y_train = np.array(augmented_measurements)
 
 from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
@@ -41,9 +50,15 @@ from keras.layers import Cropping2D
 
 model = Sequential()
 
+### preprocess the image ###
+
 # normalized the data by dividing each element by 255 which is the maximum value of an image pixel
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
+
+# cropping the image to remove unnecessary portion of image.
 model.add(Cropping2D(cropping=((70,25),(0,0))))
+
+### training with LeNet Architecture. ###
 model.add(Convolution2D(6,5,5,activation="relu"))
 model.add(MaxPooling2D())
 model.add(Convolution2D(6,5,5,activation="relu"))
