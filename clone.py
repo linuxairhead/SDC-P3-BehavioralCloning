@@ -3,36 +3,49 @@ import cv2
 import numpy as np
 
 lines = []
-with open('../simulator-self-driving-car/Data2/driving_log.csv') as csvfile:
+csv_file = '../simulator-self-driving-car/Data2/driving_log.csv'
+with open(csv_file, 'r') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
         lines.append(line)
 
+# remove first line from excel file since it doesn't contain the data. 
 del(lines[0])
 
 images = []
 measurements = []
+correction = 0.2
 
 for line in lines:
-    source_path = line[0]
-    filename = source_path.split('/')[-1]
-    #current_path = '../simulator-self-driving-car/Data2/IMG/' + filename
-    current_path = filename
-    image = cv2.imread(current_path)
+
+    # get the image for right, center, and left side camera for each line. 
+    for i in range(3):
+
+        image = cv2.imread(line[i].split('/')[-1])
 	
-	# Check the image has been successfully pick up.
-	# if not, skip adding these rows in the for loop
-    if image is None:
-        print("Image path incorrect: ", current_path)
-        continue
-    images.append(image)
-    measurement = float(line[3])
-    measurements.append(measurement)
+	    # Check the image has been successfully pick up.
+	    # if not, skip adding these rows in the for loop
+        if image is None:
+            print("Image path incorrect: ", line[i].split('/')[-1])
+            continue
+        images.append(image)
+        measurement = float(line[3])
+		
+		
+        if i is 0:   # center camera
+            measurements.append(measurement)
+			
+        elif i is 1: # left camera
+            measurements.append(measurement + correction)
+			
+        else:        # right camera
+            measurements.append(measurement - correction)
 
 # By adding flipping image And Steering Measurements
 # create twice sample	
 augmented_images = []
 augmented_measurements = []
+
 for image, measurement in zip(images, measurements):
     augmented_images.append(image)
     augmented_measurements.append(measurement)
