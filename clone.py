@@ -1,10 +1,12 @@
 import csv
 import cv2
+import utility
 import numpy as np
 
 architecture = 2 # 1 for LeNet, 2 for NVIDIA
 lines = []
-csv_file = '../simulator-self-driving-car/Data2/driving_log.csv'
+csv_file = '../simulator-self-driving-car/Data3_counterCLK/driving_log.csv'
+
 with open(csv_file, 'r') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
@@ -102,4 +104,26 @@ elif architecture is 2:
     model.compile(loss='mse', optimizer='adam')
     model.fit(X_train, y_train, validation_split=0.2, shuffle=True, nb_epoch=6)
 
-model.save('model.h5')
+model.save('model2.h5')
+
+from keras.models import Model
+import matplotlib.pyplot as plt
+
+history_object = model.fit_generator(train_generator, 
+									 samples_per_epoch = len(train_samples),
+									 validation_data = validation_generator,
+									 nb_val_samples = len(validation_samples), 
+                                     nb_epoch=5, 
+									 verbose=1)
+
+### print the keys contained in the history object
+print(history_object.history.keys())
+
+### plot the training and validation loss for each epoch
+plt.plot(history_object.history['loss'])
+plt.plot(history_object.history['val_loss'])
+plt.title('model mean squared error loss')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+plt.show()
