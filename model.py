@@ -4,7 +4,8 @@ from utility import get_data, get_model
 
 def main():
 
-    csv_file = '../simulator-self-driving-car/Data3_counterCLK/driving_log.csv'
+    csv_file = '../simulator-self-driving-car/Data2/driving_log.csv'
+	#csv_file = '../simulator-self-driving-car/Data3_counterCLK/driving_log.csv'
 
     # get data for training and validation
     data = get_data( csv_file )
