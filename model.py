@@ -14,6 +14,8 @@ def main():
     model = get_model( architecture )
     model.compile(loss='mse', optimizer='adam')
     model.fit(data[0], data[1], validation_split=0.2, shuffle=True, nb_epoch=6)
+	
+    model.save('model.h5')
 
 if __name__ == '__main__':
     main()

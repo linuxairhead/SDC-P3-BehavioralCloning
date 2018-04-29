@@ -1,20 +1,24 @@
+import os
 import csv
 import cv2
+import fnmatch
 import utility
 import numpy as np
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Flatten, Dense, Lambda, Cropping2D
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 
 
 def preprocess( ):
-    model = Sequential()
+
+    print( " Create sequential Model \n" )	
+    model = Sequential()	
 	
 	# normalized the data by dividing each element by 255 which is the maximum value of an image pixel
     model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
-
+    
     # cropping the image to remove unnecessary portion of image.
     model.add(Cropping2D(cropping=((70,25),(0,0))))		
 	
@@ -56,11 +60,19 @@ def get_NVDIA_Model():
 
 	
 def get_model( arch ):
+
+    for fname in os.listdir('.'):	
+        if fname.endswith('.h5'):
+            #print( " Checking", fname )
+            if fnmatch.fnmatch(fname, 'model.h5'):
+                print( "**", fname, "loading ... ..." )               
+                fname = os.path.realpath(os.path.join('.',fname))	
+                model = load_model(fname)
+                return model	            
     
-	if arch is 1:
-	    return get_LeNET_Model()
-	   
-	else :
+    if arch is 1:
+        return get_LeNET_Model()	 
+    else:
 	    return get_NVDIA_Model()
 	
 	
