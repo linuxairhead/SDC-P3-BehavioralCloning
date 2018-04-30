@@ -1,6 +1,7 @@
 import os
 import csv
 import cv2
+import sklearn
 import fnmatch
 import utility
 import numpy as np
@@ -9,6 +10,7 @@ from keras.models import Sequential, load_model
 from keras.layers import Flatten, Dense, Lambda, Cropping2D
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
+from sklearn.model_selection import train_test_split
 
 
 def preprocess( ):
@@ -59,7 +61,7 @@ def get_NVDIA_Model():
     return model
 
 	
-def get_model( arch ):
+def get_Model( arch ):
 
     for fname in os.listdir('.'):	
         if fname.endswith('.h5'):
@@ -75,11 +77,9 @@ def get_model( arch ):
     else:
 	    return get_NVDIA_Model()
 	
-	
-def get_augmentedData( data ):
+			
+def get_augmentedData( images, measurements ):
 
-    images = data[0]
-    measurements = data[1]
     # By adding flipping image And Steering Measurements
     # create twice sample	
     augmented_images = []
@@ -99,55 +99,63 @@ def get_augmentedData( data ):
 	
 def get_images( readData ):
 
-	images = []
-	measurements = []
-	correction = 0.2
+    images = []
+    measurements = []
+    correction = 0.2
 	
-	for line in readData:
-
-		# get the image for right, center, and left side camera for each line. 
-		for i in range(3):
-
-			image = cv2.imread(line[i].split('/')[-1])
+    for line in readData:
+	
+        # get the image for right, center, and left side camera for each line. 
+        for i in range(3):
+		
+            image = cv2.imread(line[i].split('/')[-1])
 	
 			# Check the image has been successfully pick up.
 			# if not, skip adding these rows in the for loop
-			if image is None:
-				print("Image path incorrect: ", line[i].split('/')[-1])
-				continue
-				
-			images.append(image)
-			measurement = float(line[3])		
+            if image is None:
+                print("Image path incorrect: ", line[i].split('/')[-1])
+                continue
+
+            measurement = float(line[3])
 		
-			if i is 0:   # center camera
-				measurements.append(measurement)
+            if i is 1:         # left camera
+                measurement += correction			
+            elif i is 2:       # right camera
+                measurement -= correction
+            else:
+                measurement = measurement
 			
-			elif i is 1: # left camera
-				measurements.append(measurement + correction)
+            images.append(image)	
+            measurements.append(measurement)
 			
-			else:        # right camera
-				measurements.append(measurement - correction)
-				
-	return images, measurements
+            #print( "line", line, "index", i, "measurement appended", measurement)				
+    return images, measurements
 	
+
+def get_Generator( imagesSample, batch_size ):
+
+    num_samples = len(imagesSample)
+	
+    while 1: # Loop forever so the generator never terminates
+		
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = imagesSample[offset:offset+batch_size]
+
+            images, measurements = get_images( batch_samples )
+            images, measurements = get_augmentedData( images, measurements )			
+                    		
+            yield np.array(images), np.array(measurements)
+
 			
-def read_csv( csv_file ):
-	lines = []
+def get_SampleData( csv_file ):
+	samples = []
 	with open(csv_file, 'r') as csvfile:
 		reader = csv.reader(csvfile)
 		for line in reader:
-			lines.append(line)
+			samples.append(line)
 
 	# remove first line from excel file since it doesn't contain the data. 
-	del(lines[0])
+	del(samples[0])
+	train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 	
-	return lines
-
-	
-def get_data( csv_file ):
-
-    readData = read_csv( csv_file )
-    images = get_images( readData )
-    images = get_augmentedData( images )
-	
-    return images
+	return train_samples, validation_samples
