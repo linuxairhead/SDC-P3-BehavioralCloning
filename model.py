@@ -4,13 +4,14 @@ from sklearn.model_selection import train_test_split
 
 def main():
 
-    EPOCHS = 5
+    EPOCHS = 7
     BATCH = 32
     ARCH = 2 # 1 for LeNet, 2 for NVIDIA
 	
     #csv_file = '../simulator-self-driving-car/Data1/driving_log.csv'
     #csv_file = '../simulator-self-driving-car/Data2/driving_log.csv'
-    csv_file = '../simulator-self-driving-car/Data3_counterCLK/driving_log.csv'
+    #csv_file = '../simulator-self-driving-car/Data3_counterCLK/driving_log.csv'
+    csv_file = './data/driving_log.csv'
 	
     model = get_Model( ARCH )
     model.compile(loss='mse', optimizer='adam')

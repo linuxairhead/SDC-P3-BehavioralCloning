@@ -5,6 +5,7 @@ import sklearn
 import fnmatch
 import utility
 import numpy as np
+import matplotlib.pyplot as plt
 
 from keras.models import Sequential, load_model
 from keras.layers import Flatten, Dense, Lambda, Cropping2D
@@ -19,10 +20,12 @@ def preprocess( ):
     model = Sequential()	
 	
 	# normalized the data by dividing each element by 255 which is the maximum value of an image pixel
-    model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
+    # model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
+    model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(160,320,3)))
     
     # cropping the image to remove unnecessary portion of image.
-    model.add(Cropping2D(cropping=((70,25),(0,0))))		
+	# Crop 70 pixels from the top of the image and 25 from the bottom
+    model.add(Cropping2D(cropping=((70,25),(0,0)), input_shape=(160,320,3)))		
 	
     return model
 
@@ -39,7 +42,7 @@ def get_LeNET_Model():
     model.add(Dense(120))
     model.add(Dense(84))
     model.add(Dense(1))
-   
+    model.summary()
     return model
 
 	
@@ -57,7 +60,7 @@ def get_NVDIA_Model():
     model.add(Dense(50))
     model.add(Dense(10))
     model.add(Dense(1))
-	
+    model.summary()
     return model
 
 	
@@ -73,9 +76,11 @@ def get_Model( arch ):
                 return model	            
     
     if arch is 1:
+        print(" Training with LeNet Modeling .. ")
         return get_LeNET_Model()	 
     else:
-	    return get_NVDIA_Model()
+        print(" Training with NVIDIA Modeling .. ")	
+        return get_NVDIA_Model()
 	
 			
 def get_augmentedData( images, measurements ):
@@ -108,8 +113,12 @@ def get_images( readData ):
         # get the image for right, center, and left side camera for each line. 
         for i in range(3):
 		
-            image = cv2.imread(line[i].split('/')[-1])
-	
+            #image = cv2.imread(line[i].split('/')[-1])
+            #print(line[i].split('/')[-1])
+            location="./data/"
+            image = cv2.imread(location.strip()+line[i].strip())
+            #print(location.strip()+line[i].strip())	
+            #print(os.getcwd())
 			# Check the image has been successfully pick up.
 			# if not, skip adding these rows in the for loop
             if image is None:
@@ -127,7 +136,13 @@ def get_images( readData ):
 			
             images.append(image)	
             measurements.append(measurement)
-			
+    #print(image.shape) 	
+    #input()	
+    #plt.figure(figsize=(25,25))
+    #plt.subplot(1, 5, 1)
+    #plt.imshow(image[0])
+    #plt.show()    
+	
             #print( "line", line, "index", i, "measurement appended", measurement)				
     return images, measurements
 	
@@ -142,7 +157,10 @@ def get_Generator( imagesSample, batch_size ):
             batch_samples = imagesSample[offset:offset+batch_size]
 
             images, measurements = get_images( batch_samples )
-            images, measurements = get_augmentedData( images, measurements )			
+			
+			# random 
+            if np.random.rand() < 0.5:
+                images, measurements = get_augmentedData( images, measurements )			
                     		
             yield np.array(images), np.array(measurements)
 
