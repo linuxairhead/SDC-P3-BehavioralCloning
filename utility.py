@@ -27,6 +27,8 @@ def preprocess( ):
 	# Crop 70 pixels from the top of the image and 25 from the bottom
     model.add(Cropping2D(cropping=((70,25),(0,0)), input_shape=(160,320,3)))		
 	
+    model.add(Reshape(160,320,3))
+	
     return model
 
 	
@@ -50,12 +52,18 @@ def get_NVDIA_Model():
 
     model = preprocess()
     ### training with NVIDIA Architecture. ###
+	
+	# Add three 5x5 convolution layers (output depth 24, 36, and 48), each with 2x2 stride
     model.add(Convolution2D(24,5,5, subsample=(2,2), activation="relu"))
     model.add(Convolution2D(36,5,5, subsample=(2,2), activation="relu"))
     model.add(Convolution2D(48,5,5, subsample=(2,2), activation="relu"))
+	
+	 # Add two 3x3 convolution layers (output depth 64, and 64)
     model.add(Convolution2D(64,3,3, activation="relu"))
     model.add(Convolution2D(64,3,3, activation="relu"))
     model.add(Flatten())
+	
+	# Add three fully connected layers (depth 100, 50, 10), than activation 
     model.add(Dense(100))
     model.add(Dense(50))
     model.add(Dense(10))
@@ -93,6 +101,7 @@ def get_augmentedData( images, measurements ):
     for image, measurement in zip(images, measurements):
         augmented_images.append(image)
         augmented_measurements.append(measurement)
+		
         augmented_images.append(cv2.flip(image,1))
         augmented_measurements.append(measurement*(-1.0))
 	
@@ -147,7 +156,7 @@ def get_images( readData ):
     return images, measurements
 	
 
-def get_Generator( imagesSample, batch_size ):
+def get_Generator( trainOrValidation, imagesSample, batch_size ):
 
     num_samples = len(imagesSample)
 	
@@ -159,7 +168,7 @@ def get_Generator( imagesSample, batch_size ):
             images, measurements = get_images( batch_samples )
 			
 			# random 
-            if np.random.rand() < 0.5:
+            if trainOrValidation and np.random.rand() < 0.5:
                 images, measurements = get_augmentedData( images, measurements )			
                     		
             yield np.array(images), np.array(measurements)

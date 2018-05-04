@@ -19,8 +19,8 @@ def main():
     # get data for training and validation
     train_samples, validation_samples = get_SampleData( csv_file )	
 	
-    train_generator = get_Generator(train_samples, BATCH)
-    validation_generator = get_Generator(validation_samples, BATCH)	
+    train_generator = get_Generator(1, train_samples, BATCH) # 1 for training
+    validation_generator = get_Generator(0, validation_samples, BATCH) # 0 for validation	
 	
     #print(train_samples[0].shape, len(train_samples))
     #print(validation_samples[0].shape, len(validation_samples))
