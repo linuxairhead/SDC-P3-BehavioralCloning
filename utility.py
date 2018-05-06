@@ -20,7 +20,6 @@ def preprocess( ):
     model = Sequential()	
 	
 	# normalized the data by dividing each element by 255 which is the maximum value of an image pixel
-    # model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
     model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(160,320,3)))
     
     # cropping the image to remove unnecessary portion of image.
@@ -74,6 +73,9 @@ def get_NVDIA_Model():
 	
 def get_Model( arch ):
 
+    """
+	disable retraining model using saved model
+	
     for fname in os.listdir('.'):	
         if fname.endswith('.h5'):
             #print( " Checking", fname )
@@ -82,7 +84,7 @@ def get_Model( arch ):
                 fname = os.path.realpath(os.path.join('.',fname))	
                 model = load_model(fname)
                 return model	            
-    
+    """
     if arch is 1:
         print(" Training with LeNet Modeling .. ")
         return get_LeNET_Model()	 
