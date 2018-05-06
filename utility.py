@@ -27,7 +27,7 @@ def preprocess( ):
 	# Crop 70 pixels from the top of the image and 25 from the bottom
     model.add(Cropping2D(cropping=((70,25),(0,0)), input_shape=(160,320,3)))		
 	
-    model.add(Reshape(160,320,3))
+    #model.add(Reshape(160,320,3))
 	
     return model
 
@@ -90,69 +90,125 @@ def get_Model( arch ):
         print(" Training with NVIDIA Modeling .. ")	
         return get_NVDIA_Model()
 	
-			
+	
+def random_translate(image, steering_angle):
+    """
+    Randomly shift the image virtially and horizontally (translation).
+    """
+    trans_x = 100 * (np.random.rand() - 0.5)
+    trans_y = 10 * (np.random.rand() - 0.5)
+    steering_angle += trans_x * 0.002
+    trans_m = np.float32([[1, 0, trans_x], [0, 1, trans_y]])
+    height, width = image.shape[:2]
+    image = cv2.warpAffine(image, trans_m, (width, height))
+    return image, steering_angle
+
+
+def random_shadow(image):
+    """
+    Generates and adds random shadow
+    """
+    # (x1, y1) and (x2, y2) forms a line
+    # xm, ym gives all the locations of the image
+    x1, y1 = 320 * np.random.rand(), 0
+    x2, y2 = 320 * np.random.rand(), 160
+    xm, ym = np.mgrid[0:160, 0:320]
+
+    # mathematically speaking, we want to set 1 below the line and zero otherwise
+    # Our coordinate is up side down.  So, the above the line: 
+    # (ym-y1)/(xm-x1) > (y2-y1)/(x2-x1)
+    # as x2 == x1 causes zero-division problem, we'll write it in the below form:
+    # (ym-y1)*(x2-x1) - (y2-y1)*(xm-x1) > 0
+    mask = np.zeros_like(image[:, :, 1])
+    mask[(ym - y1) * (x2 - x1) - (y2 - y1) * (xm - x1) > 0] = 1
+
+    # choose which side should have shadow and adjust saturation
+    cond = mask == np.random.randint(2)
+    s_ratio = np.random.uniform(low=0.2, high=0.5)
+
+    # adjust Saturation in HLS(Hue, Light, Saturation)
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    hls[:, :, 1][cond] = hls[:, :, 1][cond] * s_ratio
+    return cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
+
+	
+def random_brighness( image ):    
+
+    newImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    random_brightness = .1 + np.random.uniform()
+    newImage[:,:,2] =  newImage[:,:,2] * random_brightness
+	
+    return cv2.cvtColor(newImage, cv2.COLOR_HSV2RGB)	
+
+
+def random_flip(image, measurement):
+    """
+    Randomly flipt the image left to right
+	and adjust the steering angle.
+    """
+    if np.random.rand() < 0.5:
+        image = cv2.flip(image, 1)
+        measurement = -measurement
+    return image, measurement
+
+	
 def get_augmentedData( images, measurements ):
 
     # By adding flipping image And Steering Measurements
     # create twice sample	
-    augmented_images = []
-    augmented_measurements = []
+	
+    augImages = []
+    augMeasurements = []	
 
     for image, measurement in zip(images, measurements):
-        augmented_images.append(image)
-        augmented_measurements.append(measurement)
 		
-        augmented_images.append(cv2.flip(image,1))
-        augmented_measurements.append(measurement*(-1.0))
-	
-    X_train = np.array(augmented_images)
-    y_train = np.array(augmented_measurements)
-	
-    return X_train, y_train
+        image, measurement = random_flip(image, measurement)		
+        image = random_brighness( image )	
+        image, measurement = random_translate(image, measurement)   
+        image = random_shadow(image)
+		
+        augImages.append(image)	
+        augMeasurements.append(measurement)
+		
+    return augImages, augMeasurements    
 
 	
-def get_images( readData ):
+def get_images( trainOrValidation, readData ):
 
+    location="./data/"
     images = []
     measurements = []
-    correction = 0.2
+    correction = 0.2	            
 	
     for line in readData:
 	
-        # get the image for right, center, and left side camera for each line. 
-        for i in range(3):
+        # Validation get the image for center
+		# Training get random image from left, center or right camera
+        if trainOrValidation is 0:
+            i = 0
+        else:			
+            i = np.random.randint(0, 3, size=1)[0]
 		
-            #image = cv2.imread(line[i].split('/')[-1])
-            #print(line[i].split('/')[-1])
-            location="./data/"
-            image = cv2.imread(location.strip()+line[i].strip())
-            #print(location.strip()+line[i].strip())	
-            #print(os.getcwd())
-			# Check the image has been successfully pick up.
-			# if not, skip adding these rows in the for loop
-            if image is None:
-                print("Image path incorrect: ", line[i].split('/')[-1])
-                continue
+        image = cv2.imread(location.strip()+line[i].strip())
 
-            measurement = float(line[3])
+		#Check the image has been successfully pick up.
+		# if not, skip adding these rows in the for loop
+        if image is None:
+            print("Image path incorrect: ", line[i].split('/')[-1])
+            continue
+
+        measurement = float(line[3])
 		
-            if i is 1:         # left camera
-                measurement += correction			
-            elif i is 2:       # right camera
-                measurement -= correction
-            else:
-                measurement = measurement
+        if i is 0:         # center 
+            measurement = measurement			
+        elif i is 1:       # left camera
+            measurement += correction
+        else:              # right camera
+            measurement -= correction
 			
-            images.append(image)	
-            measurements.append(measurement)
-    #print(image.shape) 	
-    #input()	
-    #plt.figure(figsize=(25,25))
-    #plt.subplot(1, 5, 1)
-    #plt.imshow(image[0])
-    #plt.show()    
-	
-            #print( "line", line, "index", i, "measurement appended", measurement)				
+        images.append(image)	
+        measurements.append(measurement)
+			
     return images, measurements
 	
 
@@ -165,11 +221,11 @@ def get_Generator( trainOrValidation, imagesSample, batch_size ):
         for offset in range(0, num_samples, batch_size):
             batch_samples = imagesSample[offset:offset+batch_size]
 
-            images, measurements = get_images( batch_samples )
+            images, measurements = get_images( trainOrValidation, batch_samples )
 			
 			# random 
-            if trainOrValidation and np.random.rand() < 0.5:
-                images, measurements = get_augmentedData( images, measurements )			
+            if trainOrValidation :
+                images, measurements = get_augmentedData( images, measurements )  			    
                     		
             yield np.array(images), np.array(measurements)
 

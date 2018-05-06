@@ -22,10 +22,8 @@ def main():
     train_generator = get_Generator(1, train_samples, BATCH) # 1 for training
     validation_generator = get_Generator(0, validation_samples, BATCH) # 0 for validation	
 	
-    #print(train_samples[0].shape, len(train_samples))
-    #print(validation_samples[0].shape, len(validation_samples))
     history_object = model.fit_generator(train_generator, 
-	                                     samples_per_epoch = (3*len(train_samples)//BATCH)*BATCH, 
+	                                     samples_per_epoch = (len(train_samples)//BATCH)*BATCH, 
                                          validation_data = validation_generator,
                                          nb_val_samples = len(validation_samples), 
                                          nb_epoch = EPOCHS)
