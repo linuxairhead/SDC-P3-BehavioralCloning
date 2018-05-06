@@ -96,12 +96,12 @@ def get_Model( arch ):
         return get_NVDIA_Model()
 	
 	
-def random_translate(image, steering_angle):
+def random_translate(image, steering_angle, trans_x, trans_y):
     """
     Randomly shift the image virtially and horizontally (translation).
     """
-    trans_x = 100 * (np.random.rand() - 0.5)
-    trans_y = 10 * (np.random.rand() - 0.5)
+    trans_x = trans_x * (np.random.rand() - 0.5)
+    trans_y = trans_y * (np.random.rand() - 0.5)
     steering_angle += trans_x * 0.002
     trans_m = np.float32([[1, 0, trans_x], [0, 1, trans_y]])
     height, width = image.shape[:2]
@@ -115,9 +115,9 @@ def random_shadow(image):
     """
     # (x1, y1) and (x2, y2) forms a line
     # xm, ym gives all the locations of the image
-    x1, y1 = 320 * np.random.rand(), 0
-    x2, y2 = 320 * np.random.rand(), 160
-    xm, ym = np.mgrid[0:160, 0:320]
+    x1, y1 = IMAGE_WIDTH * np.random.rand(), 0
+    x2, y2 = IMAGE_WIDTH * np.random.rand(), IMAGE_HEIGHT
+    xm, ym = np.mgrid[0:IMAGE_HEIGHT, 0:IMAGE_WIDTH ]
 
     # mathematically speaking, we want to set 1 below the line and zero otherwise
     # Our coordinate is up side down.  So, the above the line: 
@@ -165,12 +165,14 @@ def get_augmentedData( images, measurements ):
 	
     augImages = []
     augMeasurements = []	
+    range_x=100
+    range_y=10
 
     for image, measurement in zip(images, measurements):
 		
         image, measurement = random_flip(image, measurement)		
         image = random_brighness( image )	
-        image, measurement = random_translate(image, measurement)   
+        image, measurement = random_translate(image, measurement, range_x, range_y)   
         image = random_shadow(image)
 		
         augImages.append(image)	
@@ -193,7 +195,7 @@ def get_images( trainOrValidation, readData ):
         if trainOrValidation is 0:
             i = 0
         else:			
-            i = np.random.randint(0, 3, size=1)[0]
+            i = np.random.choice(3)
 		
         image = cv2.imread(location.strip()+line[i].strip())
 
