@@ -13,6 +13,11 @@ from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 from sklearn.model_selection import train_test_split
 
+IMAGE_WIDTH = 320
+IMAGE_HEIGHT = 160
+IMAGE_CHANNELS = 3
+INPUT_SHAPE = (IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNELS)
+
 
 def preprocess( ):
 
@@ -20,13 +25,11 @@ def preprocess( ):
     model = Sequential()	
 	
 	# normalized the data by dividing each element by 255 which is the maximum value of an image pixel
-    model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(160,320,3)))
+    model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(INPUT_SHAPE)))
     
     # cropping the image to remove unnecessary portion of image.
 	# Crop 70 pixels from the top of the image and 25 from the bottom
-    model.add(Cropping2D(cropping=((70,25),(0,0)), input_shape=(160,320,3)))		
-	
-    #model.add(Reshape(160,320,3))
+    model.add(Cropping2D(cropping=((70,25),(0,0)), input_shape=(INPUT_SHAPE)))		
 	
     return model
 
@@ -135,17 +138,18 @@ def random_shadow(image):
 
 	
 def random_brighness( image ):    
-
+    """
+    Randomly apply brightness to the image 
+    """
     newImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    random_brightness = .1 + np.random.uniform()
-    newImage[:,:,2] =  newImage[:,:,2] * random_brightness
+    newImage[:,:,2] = newImage[:,:,2] * (.25 + np.random.uniform())
 	
     return cv2.cvtColor(newImage, cv2.COLOR_HSV2RGB)	
 
 
 def random_flip(image, measurement):
     """
-    Randomly flipt the image left to right
+    Randomly flipt the image horizontally 
 	and adjust the steering angle.
     """
     if np.random.rand() < 0.5:
