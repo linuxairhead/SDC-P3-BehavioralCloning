@@ -140,11 +140,21 @@ def random_shadow(image):
 def random_brighness( image ):    
     """
     Randomly apply brightness to the image 
-    """
+    ---
+	
     newImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     newImage[:,:,2] = newImage[:,:,2] * (.25 + np.random.uniform())
 	
     return cv2.cvtColor(newImage, cv2.COLOR_HSV2RGB)	
+	"""
+	newImage = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
+    newImage = np.array(newImage, dtype = np.float64)
+    random_bright = .5+np.random.uniform()
+    newImage[:,:,2] = newImage[:,:,2]*random_bright
+    newImage[:,:,2][newImage[:,:,2]>255]  = 255
+    newImage = np.array(newImage, dtype = np.uint8)
+    newImage = cv2.cvtColor(newImage,cv2.COLOR_HSV2RGB)
+    return newImage
 
 
 def random_flip(image, measurement):
@@ -186,7 +196,7 @@ def get_images( trainOrValidation, readData ):
     location="./data/"
     images = []
     measurements = []
-    correction = 0.2	            
+    correction = 0.25	            
 	
     for line in readData:
 	
