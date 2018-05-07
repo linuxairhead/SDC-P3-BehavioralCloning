@@ -95,11 +95,11 @@ def get_Model( arch ):
         print(" Training with NVIDIA Modeling .. ")	
         return get_NVDIA_Model()
 	
-	
+"""
 def random_translate(image, steering_angle, trans_x, trans_y):
-    """
+
     Randomly shift the image virtially and horizontally (translation).
-    """
+
     trans_x = trans_x * (np.random.rand() - 0.5)
     trans_y = trans_y * (np.random.rand() - 0.5)
     steering_angle += trans_x * 0.002
@@ -107,6 +107,21 @@ def random_translate(image, steering_angle, trans_x, trans_y):
     height, width = image.shape[:2]
     image = cv2.warpAffine(image, trans_m, (width, height))
     return image, steering_angle
+"""	
+
+def random_translate(image,steer,trans_range):
+    """
+    Randomly shift the image virtially and horizontally (translation).
+    """
+    # Translation
+    tr_x = trans_range*np.random.uniform()-trans_range/2
+    steer_ang = steer + tr_x/trans_range*2*.2
+    tr_y = 40*np.random.uniform()-40/2
+    #tr_y = 0
+    Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
+    image_tr = cv2.warpAffine(image,Trans_M,(IMAGE_WIDTH,IMAGE_HEIGHT))
+    
+    return image_tr,steer_ang	
 
 
 def random_shadow(image):
@@ -147,7 +162,7 @@ def random_brighness( image ):
 	
     return cv2.cvtColor(newImage, cv2.COLOR_HSV2RGB)	
 	"""
-	newImage = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
+    newImage = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
     newImage = np.array(newImage, dtype = np.float64)
     random_bright = .5+np.random.uniform()
     newImage[:,:,2] = newImage[:,:,2]*random_bright
@@ -182,7 +197,7 @@ def get_augmentedData( images, measurements ):
 		
         image, measurement = random_flip(image, measurement)		
         image = random_brighness( image )	
-        image, measurement = random_translate(image, measurement, range_x, range_y)   
+        image, measurement = random_translate(image, measurement, 150)   
         image = random_shadow(image)
 		
         augImages.append(image)	
