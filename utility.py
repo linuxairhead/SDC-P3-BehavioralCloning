@@ -116,7 +116,7 @@ def random_translate(image,steer,trans_range):
     # Translation
     tr_x = trans_range*np.random.uniform()-trans_range/2
     steer_ang = steer + tr_x/trans_range*2*.2
-    tr_y = 40*np.random.uniform()-40/2
+    tr_y = 45*np.random.uniform()- 45/2
     #tr_y = 0
     Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
     image_tr = cv2.warpAffine(image,Trans_M,(IMAGE_WIDTH,IMAGE_HEIGHT))
@@ -190,8 +190,6 @@ def get_augmentedData( images, measurements ):
 	
     augImages = []
     augMeasurements = []	
-    range_x=100
-    range_y=10
 
     for image, measurement in zip(images, measurements):
 		
@@ -211,36 +209,46 @@ def get_images( trainOrValidation, readData ):
     location="./data/"
     images = []
     measurements = []
-    correction = 0.25	            
+    correction = 0.2            
 	
     for line in readData:
 	
         # Validation get the image for center
 		# Training get random image from left, center or right camera
         if trainOrValidation is 0:
-            i = 0
-        else:			
-            i = np.random.choice(3)
-		
-        image = cv2.imread(location.strip()+line[i].strip())
-
-		#Check the image has been successfully pick up.
-		# if not, skip adding these rows in the for loop
-        if image is None:
-            print("Image path incorrect: ", line[i].split('/')[-1])
-            continue
-
-        measurement = float(line[3])
-		
-        if i is 0:         # center 
-            measurement = measurement			
-        elif i is 1:       # left camera
-            measurement += correction
-        else:              # right camera
-            measurement -= correction
+            image = cv2.imread(location.strip()+line[0].strip())
 			
-        images.append(image)	
-        measurements.append(measurement)
+            if image is None:
+                print("Image path incorrect: ", line[i].split('/')[-1])
+                continue
+				
+            measurement = float(line[3])
+            images.append(image)	
+            measurements.append(measurement)			
+
+        else :			
+            # get the image for right, center, and left side camera for each line. 
+            for i in range(3):
+			
+                image = cv2.imread(location.strip()+line[i].strip())
+
+		        #Check the image has been successfully pick up.
+		        # if not, skip adding these rows in the for loop
+                if image is None:
+                    print("Image path incorrect: ", line[i].split('/')[-1])
+                    continue
+
+                measurement = float(line[3])
+		
+                if i is 0:         # center 
+                    measurement = measurement			
+                elif i is 1:       # left camera
+                    measurement += correction
+                else:              # right camera
+                    measurement -= correction
+			
+                images.append(image)	
+                measurements.append(measurement)
 			
     return images, measurements
 	
