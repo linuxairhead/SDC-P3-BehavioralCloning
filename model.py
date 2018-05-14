@@ -4,8 +4,8 @@ from sklearn.model_selection import train_test_split
 
 def main():
 
-    EPOCHS = 7
-    BATCH = 32
+    EPOCHS = 5
+    BATCH = 128
     ARCH = 2 # 1 for LeNet, 2 for NVIDIA
 	
     #csv_file = '../simulator-self-driving-car/Data1/driving_log.csv'
@@ -28,8 +28,6 @@ def main():
                                          nb_val_samples = len(validation_samples), 
                                          nb_epoch = EPOCHS)
                                          #verbose = 1)
-
-    model.save('model.h5')	
 	
     ### print the keys contained in the history object
     print(history_object.history.keys())
@@ -42,6 +40,8 @@ def main():
     plt.xlabel('epoch')
     plt.legend(['training set', 'validation set'], loc='upper right')
     plt.show()
+	
+    model.save('model.h5')	
 	
 if __name__ == '__main__':
     main()

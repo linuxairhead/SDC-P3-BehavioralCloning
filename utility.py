@@ -75,18 +75,8 @@ def get_NVDIA_Model():
 
 	
 def get_Model( arch ):
-
     """
-	disable retraining model using saved model
-	
-    for fname in os.listdir('.'):	
-        if fname.endswith('.h5'):
-            #print( " Checking", fname )
-            if fnmatch.fnmatch(fname, 'model.h5'):
-                print( "**", fname, "loading ... ..." )               
-                fname = os.path.realpath(os.path.join('.',fname))	
-                model = load_model(fname)
-                return model	            
+	disable retraining model using saved model            
     """
     if arch is 1:
         print(" Training with LeNet Modeling .. ")
@@ -109,27 +99,12 @@ def random_translate(image, steering_angle):
 
     return image, steering_angle
 	
-"""
-def random_translate(image,steer,trans_range):
-    
-    Randomly shift the image virtially and horizontally (translation).
-    
-    # Translation
-    tr_x = trans_range*np.random.uniform()-trans_range/2
-    steer_ang = steer + tr_x/trans_range*2*.2
-    tr_y = 45*np.random.uniform()- 45/2
-    Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
-    image_tr = cv2.warpAffine(image,Trans_M,(IMAGE_WIDTH,IMAGE_HEIGHT))
-    
-    return image_tr,steer_ang	
-"""
 
 def random_shadow(image):
     """
     Generates and adds random shadow
     """
-    # (x1, y1) and (x2, y2) forms a line
-    # xm, ym gives all the locations of the image
+
     x1, y1 = IMAGE_WIDTH * np.random.rand(), 0
     x2, y2 = IMAGE_WIDTH * np.random.rand(), IMAGE_HEIGHT
     xm, ym = np.mgrid[0:IMAGE_HEIGHT, 0:IMAGE_WIDTH ]
@@ -155,12 +130,6 @@ def random_shadow(image):
 def random_brighness( image ):    
     """
     Randomly apply brightness to the image 
-    ---
-	
-    newImage = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    newImage[:,:,2] = newImage[:,:,2] * (.25 + np.random.uniform())
-	
-    return cv2.cvtColor(newImage, cv2.COLOR_HSV2RGB)	
 	"""
     newImage = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
     newImage = np.array(newImage, dtype = np.float64)
@@ -184,10 +153,10 @@ def random_flip(image, measurement):
 
 	
 def get_augmentedData( images, measurements ):
-
-    # By adding flipping image And Steering Measurements
-    # create twice sample	
-	
+    """
+    By adding flipping image And Steering Measurements
+    create twice sample	
+    """	
     augImages = []
     augMeasurements = []	
 
