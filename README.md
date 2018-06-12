@@ -67,11 +67,23 @@ During the data collection, three carmera was used to collect the data which is 
 Augmentation refers to the process of generating new training data from a smaller data set. This helps us extract as much information from data as possible.
 Since I wanted to proceed with only the given data set if possible, I used some data augmentation techniques to generate new learning data.
 
+Left | Center | Right
+-----|--------|------
+![left](./img/left_2018_04_21_15_52_40_727.jpg) | ![center](./img/center_2018_04_21_15_52_40_727.jpg) | ![right](./img/right_2018_04_21_15_52_40_727.jpg)
+
 ### Random flip
 Each image was randomly horizontally flipped and negate the steering angle with equal probability. This will help to choose the center of image. Random flip specially help to chose the center of the road. 
 
+Before | After
+-------|-------
+![before](./img/before_flip.jpg) | ![after](./img/after_flip.jpg)
+
 ### Random shadow
 Chaging brightness to simulate differnt lighting conditions. Random gamma correction is used as an alternative method changing the brightness of training images.
+
+Before | After
+-------|-------
+![before](./img/before_gamma.jpg) | ![after](./img/after_gamma.jpg)
 
 ### Random translate
 The roads on the second track have hills and downhill, and the car often jumps while driving. To simulate such a road situation, I shifted the image vertically randomly. This work was applied after image preprocessing.
